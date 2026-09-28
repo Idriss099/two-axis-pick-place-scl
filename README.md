@@ -2,7 +2,7 @@
 
 A PLC-controlled assembly cell simulated in Factory IO. A two-axis arm picks a lid from one conveyor, places it on a base waiting on a second conveyor, and ejects the finished part automatically. The control logic is written in **SCL (Structured Control Language)** as a step-sequence state machine, with a custom **SIMATIC HMI** for operation and monitoring.
 
-> 🎥 **Demo video:** _add your LinkedIn / YouTube link here_
+> 🎥 **Demo video:** [_add your LinkedIn](https://www.linkedin.com/feed/update/urn:li:activity:7508129953331449856/) / [YouTube link here_](https://www.youtube.com/watch?v=NcT9poYpcM0)
 
 ![HMI and Factory IO running side by side](docs/demo.png)
 
