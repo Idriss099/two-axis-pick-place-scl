@@ -1,0 +1,147 @@
+
+// ---------------- 1) زر Reset ----------------
+IF "Reset" THEN
+    "Reset light" := TRUE;
+    "Start light" := FALSE;
+    "Stop light" := FALSE;
+    "Grap" := FALSE;
+    "Set Z" := 0.0;
+    "Set X" := 0.0;
+    "System_Run" := FALSE;
+    "Seq_Step" := 0;
+    "Lids conveyor 1" := FALSE;
+    "Bases conveyor 1" := FALSE;
+    "Bases conveyor 2" := FALSE;
+    "Counter" := 0;
+ELSE
+    "Reset light" := FALSE;
+END_IF;
+
+
+// ---------------- 2) أزرار Start / Stop / Emergency ----------------
+IF "Start" AND "Auto" AND "Stop" AND "Emergency stop" AND "Factory run" THEN
+    "System_Run" := TRUE;
+    "Start light" := TRUE;
+END_IF;
+
+IF NOT "Stop" OR NOT "Emergency stop" THEN
+    "System_Run" := FALSE;
+    "Start light" := FALSE;
+    "Lids conveyor 1" := FALSE;
+    "Bases conveyor 1" := FALSE;
+    "Stop light" := TRUE;
+ELSE
+    "Stop light" := FALSE;
+END_IF;
+
+
+// ---------------- 3) تغذية السيورات ----------------
+// ملاحظة: "Bases conveyor 1" ما يتحكم فيه هذا القسم وقت خطوة 90
+// عشان ما يعارض أمر الإخراج اللي بتحطه خطوة 90 نفسها.
+IF "System_Run" THEN
+    
+    IF NOT "Lid at place" THEN
+        "Lids conveyor 1" := TRUE;
+    ELSE
+        "Lids conveyor 1" := FALSE;   // يوقف لما يوصل الغطاء لمكانه
+    END_IF;
+    
+    IF "Seq_Step" <> 90 THEN
+        IF NOT "Base at place" THEN
+            "Bases conveyor 1" := TRUE;
+        ELSE
+            "Bases conveyor 1" := FALSE;  // يوقف لما توصل القاعدة لمكانها
+        END_IF;
+    END_IF;
+    
+END_IF;
+
+
+// ---------------- 4) بوابات التوقف (Stop blades) ----------------
+// "Stop blade 2" ما ينفرض TRUE وقت خطوة 90 عشان يقدر ينزل فعليًا
+"Stop blade 1" := TRUE;   // يحجز طابور الأغطية دايمًا
+
+IF "Seq_Step" <> 90 THEN
+    "Stop blade 2" := TRUE;   // يحجز طابور القواعد إلا وقت الإخراج
+END_IF;
+
+// ---------------- 5) تسلسل حركة الذراع (Pick & Place) ----------------
+IF "System_Run" THEN
+    
+    CASE "Seq_Step" OF
+            
+        0:  // انتظار توفر غطاء وقاعدة بمكانهم مع بعض
+            IF "Lid at place" AND "Base at place" THEN
+                "Seq_Step" := 10;
+            END_IF;
+            
+        10: // تحريك الذراع أفقيًا فوق الغطاء
+            "Set X" := 1.2;
+            IF "X" >= 1.15 AND "X" <= 1.25 THEN
+                "Seq_Step" := 20;
+            END_IF;
+            
+        20: // النزول لألتقاط الغطاء
+            "Set Z" := 10.0;
+            IF "Z" >= 9.0 THEN
+                "Seq_Step" := 30;
+            END_IF;
+            
+        30: // مسك الغطاء
+            "Grap" := TRUE;
+            "Seq_Step" := 40;
+            
+        40: // الرفع لأعلى بعد المسك
+            "Set Z" := 0.0;
+            IF "Z" <= 0.5 THEN
+                "Seq_Step" := 50;
+            END_IF;
+            
+        50: // تحريك الذراع أفقيًا فوق القاعدة
+            "Set X" := 9.0;
+            IF "X" >= 8 THEN
+                "Seq_Step" := 60;
+            END_IF;
+            
+        60: // النزول لوضع الغطاء فوق القاعدة
+            "Set Z" := 8.1;
+            IF "Z" >= 8.0 THEN
+                "Seq_Step" := 70;
+            END_IF;
+            
+        70: // تحرير الغطاء فوق القاعدة (مع انتظار حقيقي)
+            "Grap" := FALSE;
+            "Release_Timer".TON(IN := TRUE,
+                                PT := T#1S);
+            IF "Release_Timer".Q THEN
+                "Release_Timer".TON(IN := FALSE,
+                                    PT := T#1S);  // إعادة تصفير
+                "Seq_Step" := 80;
+            END_IF;
+            
+        80: // الرفع لأعلى بعد التحرير
+            "Set Z" := 0.0;
+            IF "Z" <= 0.5 THEN
+                "Seq_Step" := 90;
+            END_IF;
+            
+        90: // إرسال القطعة المجمّعة للخارج (مع انتظار حقيقي) + زيادة العداد
+            "Bases conveyor 1" := TRUE;
+            "Bases conveyor 2" := TRUE;
+            "Stop blade 2" := FALSE;
+            "Push_Timer".TON(IN := TRUE,
+                             PT := T#2S);
+            IF "Push_Timer".Q THEN
+                "Push_Timer".TON (IN := FALSE,
+                PT := T#2S);  // إعادة تصفير
+                "Counter" := "Counter" + 1;
+                "Seq_Step" := 0;
+            END_IF;
+            
+    END_CASE;
+    
+END_IF;
+
+
+
+
