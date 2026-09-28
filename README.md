@@ -77,8 +77,6 @@ The fix: hold the command for a fixed time with TON timers (`Release_Timer`, `Pu
 ├── README.md
 ├── src/
 │   └── PickPlace_Main.scl        # main SCL logic
-├── tia-project/
-│   └── Assembler_Analog.zap*     # TIA Portal archive (state the version)
 ├── factoryio/
 │   └── Assembler_Analog.factoryio
 └── docs/
