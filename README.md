@@ -4,7 +4,8 @@ A PLC-controlled assembly cell simulated in Factory IO. A two-axis arm picks a l
 
 > 🎥 **Demo video:** [your LinkedIn](https://www.linkedin.com/feed/update/urn:li:activity:7508129953331449856/) / [YouTube link here_](https://www.youtube.com/watch?v=NcT9poYpcM0)
 
-![HMI and Factory IO running side by side](docs/demo.png)/(docs/hmi.png)
+![Factory IO running side by side](docs/demo.png)
+![HMI](docs/hmi.png)
 
 ## Tech stack
 
